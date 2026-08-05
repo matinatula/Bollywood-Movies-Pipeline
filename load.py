@@ -3,6 +3,7 @@ from sqlalchemy.types import INTEGER, DateTime, BIGINT
 from logger_config import get_logger
 import os
 from dotenv import load_dotenv
+from quality import check_no_duplicate_movie_ids, check_budget_non_negative, check_vote_average_range
 
 logger = get_logger(__name__)
 
@@ -23,6 +24,9 @@ url_object = URL.create(
 engine = create_engine(url_object)
 
 def load_to_postgres(dim_movies_df, dim_genres_df, dim_cast_df, fact_movies_df, bridge_genres_df, bridge_cast_df):
+    check_no_duplicate_movie_ids(dim_movies_df)
+    check_budget_non_negative(fact_movies_df)
+    check_vote_average_range(fact_movies_df)
 
     dtype_dict = {
         'release_date': DateTime(),
