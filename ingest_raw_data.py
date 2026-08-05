@@ -3,7 +3,9 @@ import json
 from dotenv import load_dotenv
 import os
 import time
+from logger_config import get_logger
 
+logger=get_logger(__name__)
 load_dotenv()
 
 api_key = os.getenv('API_KEY')
@@ -17,22 +19,22 @@ def fetch_from_api_to_json(language):
     file_name = f"raw/raw_{language}_movies.json"
     for i in range(1,101):
         params={'api_key':api_key,'with_original_language':language,'page':i}
-
-        response = requests.get(url,params=params)
-        if response.status_code == 200:
-            print(f"Fetching page {i}, Currently stored results = {count_results}")
+        try:
+            response = requests.get(url,params=params, timeout=10)
+            response.raise_for_status()
             data= json.loads(response.text)         # convert JSON to python
             temp_list.append(data['results'])   
-        else:
-            print(f"\nError: {response.status_code}")
+            count_results += len(data['results'])
+            logger.info(f"Fetched page {i}, total : {count_results}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"\nPage {i} request failed: {e}")
         time.sleep(0.3)
-        count_results+=len(data['results'])
 
     json_str = json.dumps(temp_list, indent=4, ensure_ascii=False) # convert python object to JSON string
 
     with open(file_name, "w", encoding="utf-8") as f:
         f.write(json_str)
-    print(f"\nSaved {count_results} movies to {file_name}.\n")
+    logger.info(f"\nSaved {count_results} movies to {file_name}.\n")
 
 
 fetch_from_api_to_json("en")

@@ -2,7 +2,9 @@ import json
 import pandas as pd
 import itertools
 import os
+from logger_config import get_logger
 
+logger = get_logger(__name__)
 languages = ["en", "hi", "ko"]
 
 
@@ -20,15 +22,18 @@ def fetch_details_from_json():
             df = pd.DataFrame(flattened_list)
             filtered_df = df.loc[(df['release_date'] >= "2016-01-01")
                             & (df['release_date'] <= "2026-12-12")]
+            logger.info(
+                f"Loaded {len(df)} raw movies for {lang}, filtering 2016-2026...")
+
             
             json_str = json.dumps(filtered_df.to_dict(orient="records"), indent=4, ensure_ascii=False)
             
             with open(file_name_2,"w", encoding="utf-8") as f:
                 f.write(json_str)
-            print(f"\nSaved {len(filtered_df)} movies to {file_name_2}.\n")
+            logger.info(f"\nSaved {len(filtered_df)} movies to {file_name_2}.\n")
 
         except FileNotFoundError:
-            print(f"Error: The file raw_{lang}_movies.json was not found.")
+            logger.error(f"Error: The file raw_{lang}_movies.json was not found.")
 
 fetch_details_from_json()
 

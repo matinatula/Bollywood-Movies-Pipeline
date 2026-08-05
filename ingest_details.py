@@ -3,12 +3,15 @@ import requests
 from dotenv import load_dotenv
 import os
 import time
+from logger_config import get_logger
 
+logger = get_logger(__name__)
 load_dotenv()
 
 api_key = os.getenv('API_KEY')
 
 def fetch_movie_details(language):
+    logger.info(f"Starting detail fetch for language: {language}")
     results = []
     file_name = f"filtered/filtered_{language}_movies.json"
     os.makedirs("details", exist_ok=True)
@@ -24,11 +27,11 @@ def fetch_movie_details(language):
             budget_response = requests.get(budget_url,params=params,timeout=10)
             cast_response = requests.get(cast_url,params=params,timeout=10)
         except requests.exceptions.RequestException as e:
-            print(f"Skipping movie {movie['id']}: {e}")
+            logger.warning(f"Skipping movie {movie['id']}: {e}")
             continue
 
         if budget_response.status_code == 200 and cast_response.status_code ==200 :
-            print(f"Fetching details for movie {movie['id']} : {movie['title']}")
+            logger.info(f"Fetching details for movie {movie['id']} : {movie['title']}")
             data_budget = json.loads(budget_response.text)
             data_credits = json.loads(cast_response.text)
 
@@ -50,17 +53,16 @@ def fetch_movie_details(language):
             results.append(temp_dict)
 
         else:
-            print(f"\nError occurred: {budget_response.status_code} / {cast_response.status_code}")
+            logger.error(f"\nError occurred: {budget_response.status_code} / {cast_response.status_code}")
         time.sleep(0.3)
+    logger.info(f"Saved {len(results)} movie details for {language}")
+
 
         
-    with open(f"details/{language}_movie_details.json", "w") as f:
-        json.dump(results, f)
+    with open(f"details/{language}_movie_details.json", "w",encoding="utf-8") as f:
+        json.dump(results, f, indent=4, ensure_ascii=False)
 
 fetch_movie_details("en")
 fetch_movie_details("hi")
 fetch_movie_details("ko")
-
-
-     
         
