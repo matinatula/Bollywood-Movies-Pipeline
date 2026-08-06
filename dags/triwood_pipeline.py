@@ -29,25 +29,22 @@ with DAG(
     with TaskGroup('extract_group') as extract_group:
         ingest_raw = BashOperator(
             task_id='ingest_raw',
-            bash_command='uv run ingest_raw_data.py',
-            cwd=PROJECT_ROOT
+            bash_command='uv run src/pipeline/ingest_raw_data.py',
         )
         filter_movies = BashOperator(
             task_id='filter_movies',
-            bash_command='uv run filter_movies.py',
-            cwd=PROJECT_ROOT
+            bash_command='uv run src/pipeline/filter_movies.py',
         )
         ingest_details = BashOperator(
             task_id='ingest_details',
-            bash_command='uv run ingest_details.py',
-            cwd=PROJECT_ROOT
+            bash_command='uv run src/pipeline/ingest_details.py',
         )
         ingest_raw >> filter_movies >> ingest_details
 
     with TaskGroup('transform_load_group') as transform_load_group:
         def run_transform_and_load():
-            from transform import load_movie_details, create_dataframes
-            from load import load_to_postgres
+            from src.pipeline.transform import load_movie_details, create_dataframes
+            from src.pipeline.load import load_to_postgres
 
             all_movie_details = load_movie_details()
             dim_movies_df, dim_genres_df, dim_cast_df, fact_movies_df, bridge_genres_df, bridge_cast_df = create_dataframes(

@@ -10,9 +10,9 @@ languages = ["en", "hi", "ko"]
 
 def fetch_details_from_json():
     for lang in languages:
-        os.makedirs("filtered", exist_ok=True)
-        file_name_1 = f"raw/raw_{lang}_movies.json"
-        file_name_2 = f"filtered/filtered_{lang}_movies.json"
+        os.makedirs("data/silver", exist_ok=True)
+        file_name_1 = f"data/bronze/raw_{lang}_movies.json"
+        file_name_2 = f"data/silver/filtered_{lang}_movies.json"
         try:
             with open(file_name_1, "r", encoding="utf-8") as file:
                 list_of_lists_of_movies = json.load(file)

@@ -1,9 +1,12 @@
-from sqlalchemy import create_engine, URL
-from sqlalchemy.types import INTEGER, DateTime, BIGINT
-from logger_config import get_logger
+import sys
 import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
+from sqlalchemy import create_engine, URL, text
+from sqlalchemy.types import INTEGER, DateTime, BIGINT
+from src.pipeline.logger_config import get_logger
 from dotenv import load_dotenv
-from quality import check_no_duplicate_movie_ids, check_budget_non_negative, check_vote_average_range
+from src.pipeline.quality import check_no_duplicate_movie_ids, check_budget_non_negative, check_vote_average_range
 
 logger = get_logger(__name__)
 
@@ -24,6 +27,12 @@ url_object = URL.create(
 engine = create_engine(url_object)
 
 def load_to_postgres(dim_movies_df, dim_genres_df, dim_cast_df, fact_movies_df, bridge_genres_df, bridge_cast_df):
+    with engine.connect() as conn:
+        conn.execute(text("""
+            TRUNCATE TABLE dim_movies, dim_genres, dim_cast,fact_movies, bridge_genres, bridge_cast CASCADE;
+        """))
+    conn.commit()    
+    logger.info("Truncated all tables for fresh reload.")
     check_no_duplicate_movie_ids(dim_movies_df)
     check_budget_non_negative(fact_movies_df)
     check_vote_average_range(fact_movies_df)
@@ -43,15 +52,15 @@ def load_to_postgres(dim_movies_df, dim_genres_df, dim_cast_df, fact_movies_df, 
         (bridge_cast_df,'bridge_cast', None)
     ]
     for df, table_name, dtype in tables:
-        df.to_sql(name=table_name, con=engine,if_exists='replace', index=False)
+        df.to_sql(name=table_name, con=engine,if_exists='append', index=False)
         logger.info(f"Loaded {len(df)} rows into '{table_name}' table.")
 
 
-    fact_movies_df.to_sql(name='fact_movies', con=engine,if_exists='replace', index=False, dtype=dtype_dict)
+    fact_movies_df.to_sql(name='fact_movies', con=engine,if_exists='append', index=False, dtype=dtype_dict)
     logger.info(f"Loaded {len(fact_movies_df)} rows into 'fact_movies' table.")
 
 if __name__ == "__main__":
-    from transform import load_movie_details, create_dataframes
+    from src.pipeline.transform import load_movie_details, create_dataframes
 
     logger.info("Starting data load pipeline...")
 

@@ -1,8 +1,6 @@
 import json
-import logging
-import os
 import pandas as pd
-from logger_config import get_logger
+from src.pipeline.logger_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -12,7 +10,7 @@ languages = ["en", "hi", "ko"]
 def load_movie_details():
     all_movie_details = []
     for lang in languages:
-        file_name = f"details/{lang}_movie_details.json"
+        file_name = f"data/silver/{lang}_movie_details.json"
         try:
             with open(file_name, "r", encoding="utf-8") as file:
                 movie_details = json.load(file)
@@ -138,10 +136,10 @@ def create_dataframes(all_movie_details):
     dim_genres_df = pd.DataFrame(dim_genres)
     dim_cast_df = pd.DataFrame(dim_cast)
 
-    fact_movies_df = pd.DataFrame(fact_movies)
+    fact_movies_df = pd.DataFrame(fact_movies).drop_duplicates(subset=['movie_id'], keep='first')
 
-    bridge_genres_df = pd.DataFrame(bridge_genres)
-    bridge_cast_df = pd.DataFrame(bridge_cast)
+    bridge_genres_df = pd.DataFrame(bridge_genres).drop_duplicates(subset=['movie_id', 'genre_id'])
+    bridge_cast_df = pd.DataFrame(bridge_cast).drop_duplicates(subset=['movie_id','cast_id'])
 
     # Type fixes and null handling
     fact_movies_df['release_date'] = pd.to_datetime(

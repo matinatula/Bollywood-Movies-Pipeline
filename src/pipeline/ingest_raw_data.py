@@ -13,10 +13,10 @@ api_key = os.getenv('API_KEY')
 url = "https://api.themoviedb.org/3/discover/movie"
 
 def fetch_from_api_to_json(language):
-    os.makedirs("raw", exist_ok=True)
+    os.makedirs("data/bronze", exist_ok=True)
     temp_list = []
     count_results = 0
-    file_name = f"raw/raw_{language}_movies.json"
+    file_name = f"data/bronze/raw_{language}_movies.json"
     for i in range(1,101):
         params={'api_key':api_key,'with_original_language':language,'page':i}
         try:

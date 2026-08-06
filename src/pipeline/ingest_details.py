@@ -13,8 +13,8 @@ api_key = os.getenv('API_KEY')
 def fetch_movie_details(language):
     logger.info(f"Starting detail fetch for language: {language}")
     results = []
-    file_name = f"filtered/filtered_{language}_movies.json"
-    os.makedirs("details", exist_ok=True)
+    file_name = f"data/silver/filtered_{language}_movies.json"
+    os.makedirs("data/silver", exist_ok=True)
     with open(file_name,"r") as f:
         movies = json.load(f)
     for movie in movies:
@@ -59,7 +59,7 @@ def fetch_movie_details(language):
 
 
         
-    with open(f"details/{language}_movie_details.json", "w",encoding="utf-8") as f:
+    with open(f"data/silver/{language}_movie_details.json", "w",encoding="utf-8") as f:
         json.dump(results, f, indent=4, ensure_ascii=False)
 
 fetch_movie_details("en")
