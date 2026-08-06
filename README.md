@@ -55,8 +55,8 @@ TMDB API
                     |
                     v
            +-----------------+
-           |  dashboard.py   |  <- Streamlit
-           |   (Analytics)   |
+           | src/dashboard/  |  <- Streamlit
+           |    app.py       |
            +-----------------+
 ```
 
@@ -97,6 +97,8 @@ TMDB API
 ```
 Triwood-Movies-Pipeline/
 ├── src/
+│   ├── dashboard/
+│   │   └── app.py                  # Streamlit analytics app
 │   └── pipeline/
 │       ├── ingest_raw_data.py      # Bronze: fetch from TMDB API
 │       ├── filter_movies.py        # Silver: filter by genre/cast
@@ -108,6 +110,8 @@ Triwood-Movies-Pipeline/
 ├── data/
 │   ├── bronze/                     # Raw JSON dumps
 │   └── silver/                     # Cleaned + enriched JSON
+├── docs/
+│   └── screenshots/                # Dashboard screenshots for README
 ├── migrations/
 │   ├── 20260805000001_create_dim_movies.sql
 │   ├── 20260805000002_create_dim_genres.sql
@@ -117,7 +121,6 @@ Triwood-Movies-Pipeline/
 │   └── 20260806000006_create_bridge_cast.sql
 ├── dags/
 │   └── triwood_pipeline.py         # Airflow DAG
-├── dashboard.py                    # Streamlit analytics app
 ├── docker-compose.yml              # Postgres 16 container
 ├── .env.example                    # Template for secrets
 ├── .gitignore
@@ -172,7 +175,7 @@ Pipeline completed successfully.
 
 ### 5. Launch the Dashboard
 ```bash
-uv run streamlit run dashboard.py
+uv run streamlit run src/dashboard/app.py
 ```
 Open [http://localhost:8501](http://localhost:8501)
 
