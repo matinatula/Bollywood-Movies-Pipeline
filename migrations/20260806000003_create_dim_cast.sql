@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS dim_cast(
+    cast_id INTEGER PRIMARY KEY,
+    cast_name TEXT NOT NULL UNIQUE
+);

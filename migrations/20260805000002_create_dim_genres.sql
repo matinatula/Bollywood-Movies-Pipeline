@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS dim_genres(
+    genre_id INTEGER PRIMARY KEY,
+    genre_name TEXT NOT NULL UNIQUE
+);
