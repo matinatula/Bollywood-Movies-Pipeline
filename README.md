@@ -259,6 +259,23 @@ Additionally, `transform.py` handles TMDB's sentinel values:
 
 ---
 
+## Data Scale
+
+| Layer | Volume |
+|-------|--------|
+| Raw API calls (bronze) | ~6,000 movies fetched across 3 languages |
+| After filtering (silver) | 1,493 unique movies |
+| After deduplication (gold) | 1,490 movies in star schema |
+| Unique genres | 19 |
+| Unique cast members | 4,124 |
+| Genre relationships | 3,360 bridge rows |
+| Cast relationships | 7,044 bridge rows |
+| Time range | 2016–2026 (10 years) |
+
+**Why this size matters:** Large enough to show real trends (COVID dip, genre volatility, budget patterns), small enough to run entirely on a laptop without Spark or cloud infrastructure. The pipeline reloads in under 5 seconds, making rapid iteration possible.
+
+---
+
 ## Future Enhancements
 
 - **SCD Type 1 Updates:** Extend incremental loading to detect changed records (e.g., updated `vote_average`) and upsert them, not just append new ones.
