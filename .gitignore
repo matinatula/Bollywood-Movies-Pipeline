@@ -5,3 +5,18 @@ airflow.db
 *.log
 .env
 test.py
+
+dags/triwood_pipeline.py.backup
+
+# Airflow local state (don't commit)
+airflow.db
+airflow.db-shm
+airflow.db-wal
+airflow.db-journal
+simple_auth_manager_passwords.json.generated
+logs/
+*.pid
+webserver_config.py
+
+# Airflow generated secrets
+airflow.cfg

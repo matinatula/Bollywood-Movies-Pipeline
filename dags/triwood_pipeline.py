@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import os
 import sys
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 default_args = {
     'owner': 'matina',
     'retries': 5,
@@ -35,15 +37,20 @@ with DAG(
     with TaskGroup('extract_group') as extract_group:
         ingest_raw = BashOperator(
             task_id='ingest_raw',
-            bash_command='uv run src/pipeline/ingest_raw_data.py'
+            bash_command='uv run src/pipeline/ingest_raw_data.py',
+            cwd=PROJECT_ROOT,
+
         )
         filter_movies = BashOperator(
             task_id='filter_movies',
-            bash_command='uv run src/pipeline/filter_movies.py'
+            bash_command='uv run src/pipeline/filter_movies.py',
+            cwd=PROJECT_ROOT,
         )
         ingest_details = BashOperator(
             task_id='ingest_details',
-            bash_command='uv run src/pipeline/ingest_details.py'
+            bash_command='uv run src/pipeline/ingest_details.py',
+            cwd=PROJECT_ROOT,
+
         )
         ingest_raw >> filter_movies >> ingest_details
 

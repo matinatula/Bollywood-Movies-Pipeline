@@ -16,7 +16,7 @@
 ## What It Does
 
 1. **Extracts** raw movie data from the TMDB API across three languages
-2. **Filters & enriches** - keeps top genres and cast, adds detailed metadata
+2. **Filters & enriches** — keeps top genres and cast, adds detailed metadata
 3. **Transforms** into a proper **star schema** with dimensions, facts, and bridge tables
 4. **Loads** into PostgreSQL with full PK/FK constraint enforcement
 5. **Serves** interactive analytics via Streamlit
@@ -43,8 +43,13 @@ TMDB API
                     |
                     v
            +-----------------+
-           |    load.py      |  <- Quality Gates + PostgreSQL
+           |    load.py      |  <- Full Load (truncate + append)
            |  (SQLAlchemy)   |
+           +-----------------+
+                    |
+           +-----------------+
+           | load_incremental|  <- Incremental Load (filter + append)
+           |    .py          |
            +-----------------+
                     |
                     v
@@ -104,7 +109,8 @@ Triwood-Movies-Pipeline/
 │       ├── filter_movies.py        # Silver: filter by genre/cast
 │       ├── ingest_details.py       # Silver: enrich with details
 │       ├── transform.py            # Gold: build star schema DataFrames
-│       ├── load.py                 # Gold: load to Postgres with quality gates
+│       ├── load.py                 # Gold: full load with quality gates
+│       ├── load_incremental.py     # Gold: incremental load (new records only)
 │       ├── quality.py              # DataQualityError + validation rules
 │       └── logger_config.py        # Centralized logging
 ├── data/
@@ -120,7 +126,7 @@ Triwood-Movies-Pipeline/
 │   ├── 20260806000005_create_bridge_genres.sql
 │   └── 20260806000006_create_bridge_cast.sql
 ├── dags/
-│   └── triwood_pipeline.py         # Airflow DAG
+│   └── triwood_pipeline.py         # Airflow DAG with BranchPythonOperator
 ├── docker-compose.yml              # Postgres 16 container
 ├── .env.example                    # Template for secrets
 ├── .gitignore
@@ -157,7 +163,7 @@ for f in migrations/*.sql; do
 done
 ```
 
-### 4. Run the Pipeline
+### 4. Run the Pipeline (Full Load)
 ```bash
 uv run python src/pipeline/load.py
 ```
@@ -173,7 +179,18 @@ Loaded 1490 rows into 'fact_movies' table.
 Pipeline completed successfully.
 ```
 
-### 5. Launch the Dashboard
+### 5. Run Incremental Load
+```bash
+uv run python src/pipeline/load_incremental.py
+```
+
+Expected output:
+```
+Found 1490 existing movies in database.
+No new movies to load. Database is already up to date.
+```
+
+### 6. Launch the Dashboard
 ```bash
 uv run streamlit run src/dashboard/app.py
 ```
@@ -236,6 +253,7 @@ Additionally, `transform.py` handles TMDB's sentinel values:
 | **Star schema over flat table** | Handles many-to-many relationships (movies <-> genres, movies <-> cast) without denormalization bloat. |
 | **Bridge tables with composite PKs** | Enforces referential integrity at the database level, not just in Pandas. |
 | **Truncate-and-load pattern** | Tables are truncated before append, making the pipeline idempotent for reliable re-runs. |
+| **Incremental loader** | Queries existing IDs and appends only new records, demonstrating production-scale loading without re-processing the entire dataset. |
 | **BIGINT for revenue/budget** | Prevents `NumericValueOutOfRange` on blockbuster films (e.g., Avatar-level revenues). |
 | **Int64 (nullable) over int64** | Pandas nullable integers hold `pd.NA` for TMDB's unknown-value sentinels, preventing skewed averages. |
 
@@ -243,7 +261,7 @@ Additionally, `transform.py` handles TMDB's sentinel values:
 
 ## Future Enhancements
 
-- **Incremental Loading:** Replace truncate-and-load with watermark-based upserts using `last_updated` timestamps for production-scale datasets.
+- **SCD Type 1 Updates:** Extend incremental loading to detect changed records (e.g., updated `vote_average`) and upsert them, not just append new ones.
 - **dbt Models:** Add a transformation layer with dbt for complex business logic and documentation.
 - **BI Integration:** Migrate from Streamlit to Metabase or Apache Superset for self-service analytics.
 - **Data Vault:** For enterprise scale, explore Data Vault 2.0 modeling to handle rapidly changing source schemas.
