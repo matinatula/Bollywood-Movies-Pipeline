@@ -9,7 +9,12 @@
 
 **Author:** Matina Tuladhar  
 **Role:** Aspiring Data Engineer  
-**Dataset:** 1,490 movies across English, Hindi, and Korean (2016-2026)
+**Dataset:** ~3,000+ production records across English, Hindi, and Korean (2016-2026)
+
+---
+## Demo (Please Watch at 1080p for best experience.)
+
+[Watch the video demo](https://m.youtube.com/watch?v=b9H8565tJbA&pp=0gcJCcQLAYcqIYzv)
 
 ---
 
@@ -106,8 +111,8 @@ Triwood-Movies-Pipeline/
 │   │   └── app.py                  # Streamlit analytics app
 │   └── pipeline/
 │       ├── ingest_raw_data.py      # Bronze: fetch from TMDB API
-│       ├── filter_movies.py        # Silver: filter by genre/cast
-│       ├── ingest_details.py       # Silver: enrich with details
+│       ├── filter_movies.py        # Silver: filter by date range
+│       ├── ingest_details.py       # Silver: enrich with details (genre/cast)
 │       ├── transform.py            # Gold: build star schema DataFrames
 │       ├── load.py                 # Gold: full load with quality gates
 │       ├── load_incremental.py     # Gold: incremental load (new records only)
@@ -170,13 +175,12 @@ uv run python src/pipeline/load.py
 
 Expected output:
 ```
-Loaded 1490 rows into 'dim_movies' table.
+Loaded ~3000 rows into 'dim_movies' table.
 Loaded 19 rows into 'dim_genres' table.
-Loaded 4124 rows into 'dim_cast' table.
-Loaded 3360 rows into 'bridge_genres' table.
-Loaded 7044 rows into 'bridge_cast' table.
-Loaded 1490 rows into 'fact_movies' table.
-Pipeline completed successfully.
+Loaded ~5000 rows into 'dim_cast' table.
+Loaded ~6000 rows into 'bridge_genres' table.
+Loaded ~13000 rows into 'bridge_cast' table.
+Loaded ~3000 rows into 'fact_movies' table.
 ```
 
 ### 5. Run Incremental Load
@@ -186,7 +190,7 @@ uv run python src/pipeline/load_incremental.py
 
 Expected output:
 ```
-Found 1490 existing movies in database.
+Found 3000+ existing movies in database.
 No new movies to load. Database is already up to date.
 ```
 
@@ -264,25 +268,15 @@ Additionally, `transform.py` handles TMDB's sentinel values:
 | Layer | Volume |
 |-------|--------|
 | Raw API calls (bronze) | ~6,000 movies fetched across 3 languages |
-| After filtering (silver) | 1,493 unique movies |
-| After deduplication (gold) | 1,490 movies in star schema |
+| After filtering (silver) | ~2,900 movies (date-filtered) |
+| After deduplication (gold) | ~3,000+ movies in star schema (accumulated across runs) |
 | Unique genres | 19 |
 | Unique cast members | 4,124 |
 | Genre relationships | 3,360 bridge rows |
 | Cast relationships | 7,044 bridge rows |
 | Time range | 2016–2026 (10 years) |
 
-**Why this size matters:** Large enough to show real trends (COVID dip, genre volatility, budget patterns), small enough to run entirely on a laptop without Spark or cloud infrastructure. The pipeline reloads in under 5 seconds, making rapid iteration possible.
-
----
-
-## Future Enhancements
-
-- **SCD Type 1 Updates:** Extend incremental loading to detect changed records (e.g., updated `vote_average`) and upsert them, not just append new ones.
-- **dbt Models:** Add a transformation layer with dbt for complex business logic and documentation.
-- **BI Integration:** Migrate from Streamlit to Metabase or Apache Superset for self-service analytics.
-- **Data Vault:** For enterprise scale, explore Data Vault 2.0 modeling to handle rapidly changing source schemas.
-
+**Why this size matters:** Large enough to show real trends (COVID dip, genre volatility, budget patterns), small enough to run entirely on a laptop without Spark or cloud infrastructure. Warehouse queries and dashboard loads run in under 5 seconds. The full API extraction takes longer due to rate-limiting delays.
 ---
 
 ## License
